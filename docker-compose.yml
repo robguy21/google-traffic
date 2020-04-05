@@ -1,0 +1,44 @@
+version: '2'
+services:
+  php:
+    container_name: app
+    working_dir: /var/www
+    build:
+      context: ./docker
+      dockerfile: app.dockerfile
+    volumes:
+      - ./:/var/www/
+      - $HOME/.composer/:$HOME/.composer/
+    environment:
+      - "APP_KEY=base64:YsXBsZhz9IkHXKQ3udNA98qlMbb88MXh1caHJbxk28o="
+      - "DB_CONNECTION=pgsql"
+      - "DB_HOST=pgsql"
+      - "DB_PORT=5432"
+      - "DB_DATABASE=postgres"
+      - "DB_USERNAME=postgres"
+      - "DB_PASSWORD=pass123"
+      - "TZ=GMT-2"
+
+  nginx:
+    container_name: nginx
+    image: jguyomard/laravel-nginx:1.13
+    volumes_from:
+      - php
+    ports:
+      # Let's make this unique so we can have multiple containers running
+      - 8777:80
+
+  pgsql:
+    container_name: db
+    image: postgres:11.3
+    environment:
+      - "POSTGRES_PASSWORD=pass123"
+      - "POSTGRES_USER=postgres"
+      - "PGDATA=/var/lib/postgresql/data"
+      - "TZ=GMT-2"
+      - "PGTZ=GMT-2"
+    ports:
+      # Let's make this unique so we can have multiple containers running
+      - 5777:5432
+    volumes:
+      - ./docker/postgresql:/var/lib/postgresql/data:cached
